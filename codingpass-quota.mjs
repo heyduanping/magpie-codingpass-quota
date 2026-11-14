@@ -63,7 +63,12 @@ function toUsage(data, now) {
   };
 }
 
-async function readUsage(cookie, signal) {
+function normalizeCookie(value) {
+  const cookie = typeof value === "string" && value.trim().replace(/^cp_session=/, "");
+  return cookie && cookieOctets.test(cookie) ? cookie : "";
+}
+
+async function readQuota(cookie, signal) {
   try {
     const response = await fetch(usageURL, {
       method: "POST",
@@ -72,16 +77,21 @@ async function readUsage(cookie, signal) {
       signal,
     });
     if (response.status === 401) {
-      return { error: "CodingPass 登录已失效，请更新 cp_session。", signIn: "expired" };
+      return { usage: { error: "CodingPass 网页登录已失效，请更新 cp_session。", signIn: "expired" } };
     }
-    if (!response.ok) return { error: `CodingPass 额度查询返回 HTTP ${response.status}。` };
+    if (!response.ok) return { usage: { error: `CodingPass 额度查询返回 HTTP ${response.status}。` } };
 
     const payload = await response.json();
-    return toUsage(payload?.json, Date.now());
+    return {
+      usage: toUsage(payload?.json, Date.now()),
+      subscriptionId: payload?.json?.subscription?.id,
+    };
   } catch {
-    return { error: "CodingPass 额度读取失败，请检查网络或稍后刷新。" };
+    return { usage: { error: "CodingPass 额度读取失败，请检查网络或稍后刷新。" } };
   }
 }
+
+export const quota = { normalizeCookie, readQuota };
 
 export default async function codingPassQuota() {
   return {
@@ -97,11 +107,11 @@ export default async function codingPassQuota() {
         label: "CodingPass 登录 Cookie",
         prompts: [{ type: "password", key: "cookie", message: "cp_session 的值" }],
         async authorize(inputs, { signal } = {}) {
-          const cookie = (inputs.cookie ?? "").trim().replace(/^cp_session=/, "");
-          if (!cookieOctets.test(cookie)) {
+          const cookie = normalizeCookie(inputs.cookie);
+          if (!cookie) {
             return { type: "failed", error: "请填写 cp_session 的值，勿粘贴整条 Cookie 请求头。" };
           }
-          const usage = await readUsage(cookie, signal);
+          const { usage } = await readQuota(cookie, signal);
           if (usage.error) return { type: "failed", error: usage.error };
           // A renewed Cookie must keep the same history key for this personal account.
           return { type: "success", key: cookie, metadata: { email: "CodingPass" } };
@@ -109,7 +119,8 @@ export default async function codingPassQuota() {
       }],
       async usage(getAuth, _provider, { signal } = {}) {
         const { key } = await getAuth();
-        return readUsage(key, signal);
+        const { usage } = await readQuota(key, signal);
+        return usage;
       },
     },
   };
