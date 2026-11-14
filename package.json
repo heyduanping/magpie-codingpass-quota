@@ -1,0 +1,17 @@
+{
+  "name": "magpie-codingpass-quota",
+  "version": "0.1.0",
+  "description": "CodingPass subscription quota history in Magpie",
+  "type": "module",
+  "main": "./codingpass-quota.mjs",
+  "files": ["codingpass-quota.mjs"],
+  "keywords": ["magpie-plugin", "opencode-plugin", "codingpass"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heyduanping/magpie-codingpass-quota.git"
+  },
+  "magpie": {
+    "name": "CodingPass Usage"
+  }
+}
