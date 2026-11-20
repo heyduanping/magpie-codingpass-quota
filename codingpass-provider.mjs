@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import codingPassQuota, { quota } from "./codingpass-quota.mjs";
+import { startWarmup, warmupOptions } from "./warmup.mjs";
 
 const origin = "https://codingpass.ai";
 const baseURL = `${origin}/v1`;
@@ -102,9 +103,10 @@ function asModel(model, known) {
   };
 }
 
-export default async function codingPassProvider() {
+export default async function codingPassProvider(input, options) {
   const legacy = await codingPassQuota();
   const provider = legacy.auth.provider;
+  const warmer = startWarmup(input, options);
   return {
     config(config) {
       legacy.config(config);
@@ -112,6 +114,7 @@ export default async function codingPassProvider() {
     },
     auth: {
       provider,
+      options: warmupOptions,
       methods: [{
         type: "api",
         label: "CodingPass API Key 和额度 Cookie",
@@ -134,8 +137,10 @@ export default async function codingPassProvider() {
           return { error: "请登录 CodingPass 并填写额度 Cookie。", signIn: "kept" };
         }
 
-        const { usage, subscriptionId } = await quota.readQuota(auth.metadata.usageCookie, options?.signal);
-        if (!usage.error && accountName(subscriptionId) !== auth.metadata.email) {
+        const { usage, subscriptionId, canWarm } = await quota.readQuota(auth.metadata.usageCookie, options?.signal);
+        const sameAccount = accountName(subscriptionId) === auth.metadata.email;
+        warmer?.observe(auth.metadata.email, sameAccount && hasModelKey(auth) && canWarm === true, usage);
+        if (!usage.error && !sameAccount) {
           return { error: "CodingPass 额度查询返回了不同的订阅，请重新登录。", signIn: "kept" };
         }
         // This check only speaks for the web session. Model requests check the API Key.

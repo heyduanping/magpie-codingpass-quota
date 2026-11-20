@@ -82,8 +82,15 @@ async function readQuota(cookie, signal) {
     if (!response.ok) return { usage: { error: `CodingPass 额度查询返回 HTTP ${response.status}。` } };
 
     const payload = await response.json();
+    const now = Date.now();
+    const usage = toUsage(payload?.json, now);
+    const start = payload?.json?.live?.window5hStartAt;
+    const idle = start === null || timestamp(start) + 5 * 3600_000 <= now;
     return {
-      usage: toUsage(payload?.json, Date.now()),
+      usage,
+      canWarm: idle && usage.windows?.length === windowFields.length &&
+        usage.windows.every((w) => w.used < 100) &&
+        usage.windows[0].used === 0 && !usage.windows[0].resetsAt,
       subscriptionId: payload?.json?.subscription?.id,
     };
   } catch {
