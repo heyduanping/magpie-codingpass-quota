@@ -10,9 +10,10 @@ const modelPattern = /^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/;
 const defaultModel = "deepseek-v4.1-flash";
 
 export const warmupOptions = [
-  { key: "warm_on_reset", label: "5 小时窗口重置后预热", placement: "top",
+  // Magpie 0.1.4479 gives top-placed options its 46px title-bar height.
+  { key: "warm_on_reset", label: "5 小时窗口重置后预热",
     description: "窗口空闲时向指定账号发一条短消息，使用该账号的额度。多个账号请在插件选项中指定 warmupAccount。" },
-  { key: "warm_daily", label: "每日定时预热", placement: "top",
+  { key: "warm_daily", label: "每日定时预热",
     description: "按本机时间预热空闲窗口。默认 09:00，可在插件选项 warmupTimes 中设置多个时间。" },
 ];
 

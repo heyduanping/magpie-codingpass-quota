@@ -42,7 +42,7 @@ magpie quota history codingpass-quota
 
 ## 预热 5 小时窗口（v0.3.0）
 
-通过 GitHub 仓库地址安装的用户，把现有插件更新到 `v0.3.0` 即可沿用原账号。更新后打开「供应商 → CodingPass」即可看到两个自动预热开关。
+通过 GitHub 仓库地址安装的用户，更新现有插件即可沿用原账号。从 `v0.3.1` 起，两个自动预热开关位于「供应商 → CodingPass」的模型列表下方，在「插件选项」中可以分别设置。
 
 预热会通过本机 Magpie 网关向指定 CodingPass 账号发送一条 `hi`，最多请求 16 个输出 token，按所选模型消耗套餐额度。首个请求开启 5 小时窗口。周额度和月额度按账单周期重置。[CodingPass 用量规则](https://codingpass.ai/zh/usage-limits)
 

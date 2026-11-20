@@ -1,6 +1,6 @@
 {
   "name": "magpie-codingpass-quota",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "CodingPass account models and subscription quota history in Magpie",
   "type": "module",
   "main": "./codingpass-provider.mjs",
